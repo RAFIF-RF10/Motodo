@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="p-6 md:p-10">
-           <div
+        <div
             class="relative flex items-center justify-between rounded-3xl overflow-hidden shadow-2xl border border-white/30
             bg-gradient-to-r from-[#0064E0] to-[#0082FB] text-white p-6 md:p-10 mb-10">
 
@@ -40,8 +40,6 @@
         @if (Auth::user()->role->name === 'Admin')
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white dark:bg-[#1C2B33] rounded-2xl shadow p-6 hover:shadow-md transition">
-
-
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Jumlah Siswa</h2>
@@ -96,7 +94,7 @@
 
         {{-- ==== USER ==== --}}
         @if (Auth::user()->role->name === 'User')
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white dark:bg-[#1C2B33] rounded-2xl shadow p-6 hover:shadow-md transition">
                     <div class="flex items-center justify-between">
                         <div>
@@ -128,44 +126,72 @@
                 </div>
             </div>
 
-            {{-- === Chart User === --}}
-            <div class="relative flex flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-md mt-10">
-                <div class="pt-6 px-2 pb-0">
-                    <div id="user-chart"></div>
+            {{-- === Chart User (Same Style as Admin) === --}}
+            <div class="bg-white dark:bg-[#1C2B33] rounded-2xl shadow p-6 mt-10">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                    Statistik Pengerjaan Tugas Saya
+                </h2>
+                <div id="user-chart" class="w-full"></div>
+
+                <div class="flex flex-wrap gap-4 justify-center mt-6">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Completed (Selesai)</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">In Progress (Menunggu ACC)</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Pending (Belum Dikerjakan)</span>
+                    </div>
                 </div>
             </div>
 
+            {{-- Tabel Tugas Terbaru --}}
             <div class="mt-10 bg-white dark:bg-[#1C2B33] rounded-2xl shadow p-6">
                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Tugas Terbaru</h2>
-                <table class="w-full text-left text-gray-700 dark:text-gray-300">
-                    <thead>
-                        <tr class="border-b border-gray-200 dark:border-gray-700">
-                            <th class="py-2">Judul</th>
-                            <th class="py-2">Deadline</th>
-                            <th class="py-2">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($tugasTerbaru as $tugas)
-                            <tr class="border-b border-gray-100 dark:border-gray-700">
-                                <td class="py-3">{{ $tugas->title }}</td>
-                                <td>{{ \Carbon\Carbon::parse($tugas->deadline)->format('d M Y') }}</td>
-                                <td>
-                                    @if ($tugas->status === 'Completed')
-                                        <span class="text-green-500 font-semibold">Selesai</span>
-                                    @elseif ($tugas->status === 'In Progress')
-                                        <span class="text-yellow-500 font-semibold">Menunggu ACC Guru</span>
-                                    @elseif ($tugas->status === 'Pending')
-                                        <span class="text-red-500 font-semibold">Belum Dikerjakan</span>
-                                    @else
-                                        <span class="text-gray-400 font-semibold">Tidak Diketahui</span>
-                                    @endif
-                                </td>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-gray-700 dark:text-gray-300">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="py-2 px-4">Judul</th>
+                                <th class="py-2 px-4">Deadline</th>
+                                <th class="py-2 px-4">Status</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse ($tugasTerbaru as $tugas)
+                                <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                                    <td class="py-3 px-4 font-medium">{{ $tugas->title }}</td>
+                                    <td class="py-3 px-4">{{ \Carbon\Carbon::parse($tugas->deadline)->format('d M Y') }}</td>
+                                    <td class="py-3 px-4">
+                                        @if ($tugas->status === 'Completed')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                                Selesai
+                                            </span>
+                                        @elseif ($tugas->status === 'In Progress')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                                Menunggu ACC
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                                                Belum Dikerjakan
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center py-6 text-gray-500">
+                                        Belum ada tugas
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         @endif
     </div>
@@ -209,31 +235,31 @@
     @if (Auth::user()->role->name === 'User')
         <script>
             const userConfig = {
-                series: [{
-                    name: "Tugas Selesai",
-                    data: @json($chartData)
-                }],
+                series: @json($chartData),
                 chart: {
                     type: "line",
-                    height: 240,
+                    height: 280,
                     toolbar: {
                         show: false
                     }
                 },
-                colors: ["#2563eb"],
+                colors: ["#10B981", "#F59E0B", "#EF4444"],
                 stroke: {
-                    curve: "smooth",
-                    lineCap: "round"
+                    width: 3,
+                    curve: "smooth"
                 },
                 xaxis: {
-                    categories: @json($chartLabels)
+                    categories: @json($bulanLabels)
                 },
                 grid: {
-                    borderColor: "#dddddd",
-                    strokeDashArray: 5
+                    borderColor: "#E5E7EB",
+                    strokeDashArray: 4
                 },
                 tooltip: {
                     theme: "dark"
+                },
+                legend: {
+                    show: false
                 },
             };
             new ApexCharts(document.querySelector("#user-chart"), userConfig).render();

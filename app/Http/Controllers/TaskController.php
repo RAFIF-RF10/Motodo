@@ -6,8 +6,11 @@ use App\Models\Priority;
 use App\Models\Status;
 use App\Models\Task;
 use App\Models\TodoList;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 
 class TaskController extends Controller
 {
@@ -128,26 +131,32 @@ class TaskController extends Controller
     }
     public function export($todoListId, $taskId)
     {
-        $task = Task::where('todo_list_id', $todoListId)
-            ->where('id', $taskId)
-            ->with(['detail', 'priority', 'status', 'submissions.user'])
-            ->firstOrFail();
+         $task = Task::with([
+        'status',
+        'priority',
+        'detail',
+        'submissions.user',
+        'submissions.status'
+    ])->findOrFail($taskId);
 
-        return response()->json([
-            'title' => $task->title,
-            'description' => $task->description,
-            'priority' => $task->priority->name ?? null,
-            'status' => $task->status->name ?? null,
-            'deadline' => $task->deadline,
-            'detail' => $task->detail,
-            'submissions' => $task->submissions,
-        ]);
+    $options = new Options();
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isRemoteEnabled', true);
+
+    $dompdf = new Dompdf($options);
+
+    $html = View::make('teacher.pdf.task', compact('task'))->render();
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    return $dompdf->stream('task_'.$task->id.'.pdf');
     }
 
     public function destroy($todoListId, $taskId)
     {
         $task = Task::where('todo_list_id', $todoListId)->findOrFail($taskId);
-        $this->authorize('delete', $task);
 
         $task->delete();
         return redirect()->route('todolist.show', $todoListId)

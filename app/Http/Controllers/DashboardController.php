@@ -58,17 +58,28 @@ class DashboardController extends Controller
 }
 
 
-        if ($roleName === 'User') {
+             if ($roleName === 'User') {
             $totalTugas = DB::table('tasks')->count();
-            $completedStatusId = DB::table('statuses')->where('name', 'Completed')->value('id');
 
+            // Get status IDs
+            $completedStatusId = DB::table('statuses')->where('name', 'Completed')->value('id');
+            $inProgressStatusId = DB::table('statuses')->where('name', 'In Progress')->value('id');
+            $pendingStatusId = DB::table('statuses')->where('name', 'Pending')->value('id');
+
+            // Count tugas by status
             $tugasSelesai = DB::table('submissions')
                 ->where('user_id', $user->id)
                 ->where('status_id', $completedStatusId)
                 ->count();
 
-            $belumDikerjakan = $totalTugas - $tugasSelesai;
+            $tugasMenunggu = DB::table('submissions')
+                ->where('user_id', $user->id)
+                ->where('status_id', $inProgressStatusId)
+                ->count();
 
+            $belumDikerjakan = $totalTugas - ($tugasSelesai + $tugasMenunggu);
+
+            // Tugas Terbaru
             $tugasTerbaru = DB::table('tasks')
                 ->leftJoin('submissions', function ($join) use ($user) {
                     $join->on('tasks.id', '=', 'submissions.task_id')
@@ -78,22 +89,67 @@ class DashboardController extends Controller
                 ->select(
                     'tasks.title',
                     'tasks.deadline',
-                    DB::raw("COALESCE(statuses.name, 'Belum Dikerjakan') as status")
+                    DB::raw("COALESCE(statuses.name, 'Pending') as status")
                 )
                 ->orderByDesc('tasks.created_at')
-                ->limit(3)
+                ->limit(5)
                 ->get();
 
-            $chart = DB::table('submissions')
-                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+            // Chart Data - Get submissions by month and status for this user
+            $chartRaw = DB::table('submissions')
+                ->selectRaw('MONTH(created_at) as bulan, status_id, COUNT(*) as total')
                 ->where('user_id', $user->id)
-                ->where('status_id', $completedStatusId)
-                ->groupBy('bulan')
+                ->groupBy('bulan', 'status_id')
                 ->orderBy('bulan')
                 ->get();
 
-            $chartLabels = $chart->pluck('bulan')->map(fn($b) => date('M', mktime(0, 0, 0, $b, 10)));
-            $chartData = $chart->pluck('total');
+            // For tasks without submission (Pending)
+            $allTasksMonths = DB::table('tasks')
+                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+                ->groupBy('bulan')
+                ->get();
+
+            $submittedTasksMonths = DB::table('submissions')
+                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+                ->where('user_id', $user->id)
+                ->groupBy('bulan')
+                ->get();
+
+            $bulanLabels = collect(range(1, 12))->map(fn($b) => date('M', mktime(0, 0, 0, $b, 10)));
+
+            // Build chart data for each status
+            $chartData = [];
+
+            // Completed
+            $completedData = [];
+            foreach (range(1, 12) as $bulan) {
+                $count = $chartRaw->where('status_id', $completedStatusId)
+                    ->where('bulan', $bulan)
+                    ->first()
+                    ->total ?? 0;
+                $completedData[] = $count;
+            }
+            $chartData[] = ['name' => 'Completed', 'data' => $completedData];
+
+            // In Progress
+            $inProgressData = [];
+            foreach (range(1, 12) as $bulan) {
+                $count = $chartRaw->where('status_id', $inProgressStatusId)
+                    ->where('bulan', $bulan)
+                    ->first()
+                    ->total ?? 0;
+                $inProgressData[] = $count;
+            }
+            $chartData[] = ['name' => 'In Progress', 'data' => $inProgressData];
+
+            // Pending (tasks not submitted)
+            $pendingData = [];
+            foreach (range(1, 12) as $bulan) {
+                $allTasks = $allTasksMonths->where('bulan', $bulan)->first()->total ?? 0;
+                $submitted = $submittedTasksMonths->where('bulan', $bulan)->first()->total ?? 0;
+                $pendingData[] = $allTasks - $submitted;
+            }
+            $chartData[] = ['name' => 'Pending', 'data' => $pendingData];
 
             return view('dashboard', compact(
                 'title',
@@ -101,7 +157,7 @@ class DashboardController extends Controller
                 'tugasSelesai',
                 'belumDikerjakan',
                 'tugasTerbaru',
-                'chartLabels',
+                'bulanLabels',
                 'chartData'
             ));
         }

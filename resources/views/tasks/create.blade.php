@@ -1,13 +1,16 @@
 @extends('Layout.app')
 
 @section('content')
+@push('head')
+        <meta name="turbo-cache-control" content="no-cache">
+    @endpush
     <div
         class="max-w-3xl mx-auto mt-20 px-6 py-10 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-md transition-all">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
             Buat Tugas untuk: <span class="text-blue-600">{{ $todoList->title }}</span>
         </h1>
 
-        <form action="{{ route('tasks.store', ['todolist' => $todoList->id]) }}" method="POST" enctype="multipart/form-data"
+        <form  data-turbo="false" action="{{ route('tasks.store', ['todolist' => $todoList->id]) }}" method="POST" enctype="multipart/form-data"
             class="space-y-6">
             @csrf
             <input type="hidden" name="todo_list_id" value="{{ $todoList->id }}">
@@ -135,7 +138,8 @@
             </div>
         </form>
     </div>
-
+@endsection
+@push('scripts')
     <script>
         function previewFile(event) {
             const file = event.target.files[0];
@@ -163,4 +167,4 @@
             }
         }
     </script>
-@endsection
+@endpush

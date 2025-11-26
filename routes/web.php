@@ -9,6 +9,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\teacher\ReportController;
 use App\Http\Controllers\teacher\StudentController;
 use App\Http\Controllers\TeacherSubmissionController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserTaskController;
 
 /*
@@ -30,7 +31,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:Admin'])->group(function () {
         Route::resource('todolist', TodoListController::class);
-
+        Route::get('settings/users', [UserController::class, 'index'])->name('teacher.settings.users.index');
+        Route::get('settings/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('settings/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('settings/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::patch('settings/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('settings/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::patch('settings/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+        Route::get('/tasks/{todoListId}/{taskId}/export', [TaskController::class, 'export'])->name('tasks.export');
         Route::get('todolist/{todolist}/tasks', [TaskController::class, 'index'])->name('tasks.index');
         Route::get('todolist/{todolist}/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
         Route::post('todolist/{todolist}/tasks', [TaskController::class, 'store'])->name('tasks.store');
@@ -38,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('todolist/{todolist}/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
         Route::put('todolist/{todolist}/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
         Route::delete('todolist/{todolist}/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
-        Route::get('/todolist/{todoListId}/tasks/{taskId}/export', [TaskController::class, 'export'])->name('tasks.export');
+        Route::post('/teacher/submission/{id}/set-status', [TeacherSubmissionController::class, 'setStatusFromTask'])->name('teacher.submission.setStatusTask');
 
         Route::get('/teacher/submissions', [TeacherSubmissionController::class, 'index'])->name('teacher.submission.index');
         Route::put('/teacher/submissions/{id}/status', [TeacherSubmissionController::class, 'updateStatus'])->name('teacher.submission.updateStatus');

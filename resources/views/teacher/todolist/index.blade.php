@@ -1,15 +1,19 @@
 @extends('layout.app')
 
 @section('content')
-    <section class="p-6">
-        <div class="flex justify-between mt-20 items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Daftar Todo List</h1>
-
-            <button id="openModalBtn"
-                class="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition">
-                + Tambah Todo
-            </button>
+    <section class="p-6 mt-2">
+       <div class="relative mb-16 rounded-3xl overflow-hidden shadow-xl border border-white/20 bg-gradient-to-r from-[#0064E0] to-[#0082FB] text-white p-10">
+            <div class="relative z-10">
+                <h1 class="text-4xl font-black mb-2 tracking-tight">Daftar Tugas Saya</h1>
+                <p class="text-white dark:text-gray-400 text-md">
+                    Kelola dan kerjakan semua tugas yang diberikan oleh guru.
+                </p>
+            </div>
+            <div class="absolute right-0 bottom-0 opacity-20 pointer-events-none select-none">
+                {{ svg('hugeicons-book-02', 'w-64 h-64') }}
+            </div>
         </div>
+
 
         <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-6">
             <div class="flex-grow">
@@ -33,6 +37,10 @@
             <input type="date" id="date" name="date" value="{{ request('date') }}"
                 class="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0082fb] dark:bg-gray-800 dark:text-gray-200 w-full">
         </div>
+         <button id="openModalBtn"
+        class="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition">
+        + Tambah Todo
+    </button>
         </div>
 
         <div
@@ -148,7 +156,6 @@
             @csrf
             @method('PUT')
 
-            <!-- Judul -->
             <div class="mb-4">
                 <label for="edit_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Judul
@@ -157,18 +164,15 @@
                     class="w-full mt-2 px-3 py-2 border rounded-lg dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-400">
             </div>
 
-            <!-- Gambar -->
             <div class="mb-4">
                 <label for="edit_image" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Gambar (Opsional)
                 </label>
                 <input type="file" id="edit_image" name="image" accept="image/*"
                     class="w-full mt-2 px-3 py-2 border rounded-lg cursor-pointer dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-400">
-                <!-- Preview -->
                 <img id="edit_image_preview" src="" alt="Preview" class="mt-3 rounded-lg hidden w-full object-cover max-h-40">
             </div>
 
-            <!-- Deskripsi -->
             <div class="mb-4">
                 <label for="edit_description"
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -178,7 +182,6 @@
                     class="w-full mt-2 px-3 py-2 border rounded-lg dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-400"></textarea>
             </div>
 
-            <!-- Tombol -->
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeEditModal()"
                     class="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
@@ -194,16 +197,13 @@
 </div>
 
 
-    {{-- Modal Tambah Todo --}}
   <div id="addModal" class="hidden fixed inset-0 bg-black/50 flex justify-center items-center z-50">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-96 p-6 relative">
         <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Tambah Todo Baru</h2>
 
-        <!-- Tambahkan enctype untuk upload file -->
-        <form action="{{ route('todolist.store') }}" method="POST" enctype="multipart/form-data">
+        <form  data-turbo="false" action="{{ route('todolist.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <!-- Judul -->
             <div class="mb-4">
                 <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Judul
@@ -327,20 +327,7 @@
             }
         });
 
-        document.addEventListener('turbo:load', () => {
-            const searchInput = document.getElementById('searchInput');
-            const rows = document.querySelectorAll('#todoTable tbody tr');
-
-            if (searchInput) {
-                searchInput.addEventListener('input', () => {
-                    const q = searchInput.value.toLowerCase();
-                    rows.forEach(row => {
-                        const title = row.querySelector('td:nth-child(2)')?.innerText.toLowerCase();
-                        row.style.display = title && title.includes(q) ? '' : 'none';
-                    });
-                });
-            }
-        });
+      
 
         function openEditModal(id, title, desc) {
             const modal = document.getElementById('editModal');
@@ -360,64 +347,167 @@
             modal.classList.remove('flex');
         }
 
-        // flash handler consolidated above; no-op here to avoid duplicate alerts
-        function applyFilters() {
-            const search = document.getElementById('searchInput').value;
-            const sort = document.getElementById('sort').value;
-            const date = document.getElementById('date').value;
 
-            const currentUrl = new URL(window.location.href);
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sort');
+    const dateInput = document.getElementById('date');
+    const tableBody = document.querySelector('#todoTable tbody');
 
-            currentUrl.searchParams.delete('search');
-            currentUrl.searchParams.delete('sort');
-            currentUrl.searchParams.delete('date');
+    // Simpan semua rows asli
+    let allRows = [];
 
-            if (search) {
-                currentUrl.searchParams.set('search', search);
+    function initializeRows() {
+        allRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => {
+            return !row.querySelector('td[colspan]');
+        });
+
+        // Simpan index asli untuk sorting
+        allRows.forEach((row, index) => {
+            row.setAttribute('data-original-index', index + 1);
+        });
+    }
+
+    initializeRows();
+
+    function showEmptyState(message = 'Belum ada todo list') {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center justify-center space-y-3">
+                        <svg class="w-16 h-16 text-gray-300 dark:text-gray-600" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">${message}</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function parseDateFromText(text) {
+        const bulan = {
+            'Jan': 0, 'Januari': 0,
+            'Feb': 1, 'Februari': 1,
+            'Mar': 2, 'Maret': 2,
+            'Apr': 3, 'April': 3,
+            'Mei': 4, 'May': 4,
+            'Jun': 5, 'Juni': 5,
+            'Jul': 6, 'Juli': 6,
+            'Agu': 7, 'Agustus': 7, 'Aug': 7,
+            'Sep': 8, 'September': 8,
+            'Okt': 9, 'Oktober': 9, 'Oct': 9,
+            'Nov': 10, 'November': 10,
+            'Des': 11, 'Desember': 11, 'Dec': 11
+        };
+
+        const parts = text.trim().split(' ');
+        if (parts.length === 3) {
+            const day = parseInt(parts[0]);
+            const month = bulan[parts[1]];
+            const year = parseInt(parts[2]);
+
+            if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+                return new Date(year, month, day);
             }
-            currentUrl.searchParams.set('sort', sort);
+        }
+        return null;
+    }
 
-            if (date) {
-                currentUrl.searchParams.set('date', date);
-            }
+    function formatDate(value) {
+        const d = new Date(value);
+        const day = d.getDate();
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const month = monthNames[d.getMonth()];
+        const year = d.getFullYear();
+        return `${day} ${month} ${year}`;
+    }
 
-            showLoading();
+    function filterAndSort() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const sortOrder = sortSelect.value;
+        const filterDate = dateInput.value;
 
-            setTimeout(() => {
-                window.location.href = currentUrl.toString();
-            }, 100);
+        // Clone array
+        let filteredRows = [...allRows];
+
+        // Filter berdasarkan search term (judul)
+        if (searchTerm) {
+            filteredRows = filteredRows.filter(row => {
+                const titleCell = row.querySelector('td:nth-child(2) span');
+                if (titleCell) {
+                    const title = titleCell.textContent.toLowerCase();
+                    return title.includes(searchTerm);
+                }
+                return false;
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Filter berdasarkan tanggal dibuat
+        if (filterDate) {
+            filteredRows = filteredRows.filter(row => {
+                const dateCell = row.querySelector('td:nth-child(3) span');
+                if (dateCell) {
+                    const dateText = dateCell.textContent.trim();
+                    const todoDate = parseDateFromText(dateText);
+                    const selectedDate = new Date(filterDate);
 
-            const searchInput = document.getElementById('searchInput');
-            const sortSelect = document.getElementById('sort');
-            const dateInput = document.getElementById('date');
+                    return todoDate &&
+                        todoDate.getDate() === selectedDate.getDate() &&
+                        todoDate.getMonth() === selectedDate.getMonth() &&
+                        todoDate.getFullYear() === selectedDate.getFullYear();
+                }
+                return false;
+            });
+        }
 
-            // Filter Otomatis saat pilihan 'Urutkan' (sort) diubah
-            if (sortSelect) {
-                sortSelect.addEventListener('change', applyFilters);
-            }
-
-            if (dateInput) {
-                dateInput.addEventListener('change', applyFilters);
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentSearch = urlParams.get('search');
-            if (searchInput && currentSearch) {
-                searchInput.value = currentSearch;
-            }
-
-            if (searchInput) {
-                let timeout = null;
-                searchInput.addEventListener('input', () => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-                        applyFilters();
-                    }, 500);
-                });
-            }
+        // Sorting berdasarkan index asli (urutan dibuat)
+        filteredRows.sort((a, b) => {
+            const indexA = parseInt(a.getAttribute('data-original-index'));
+            const indexB = parseInt(b.getAttribute('data-original-index'));
+            return sortOrder === 'asc' ? indexA - indexB : indexB - indexA;
         });
+
+        // Clear table body
+        tableBody.innerHTML = '';
+
+        // Tampilkan hasil
+        if (filteredRows.length > 0) {
+            filteredRows.forEach((row, index) => {
+                // Update nomor urut di kolom pertama
+                const numberCell = row.querySelector('td:first-child div');
+                if (numberCell) {
+                    numberCell.textContent = index + 1;
+                }
+                tableBody.appendChild(row);
+            });
+        } else {
+            let message = 'Belum ada todo list';
+
+            if (searchTerm && !filterDate) {
+                message = `Tidak ada todo dengan judul "${searchTerm}"`;
+            } else if (filterDate && !searchTerm) {
+                message = `Tidak ada todo pada tanggal ${formatDate(filterDate)}`;
+            } else if (searchTerm && filterDate) {
+                message = `Tidak ada todo berjudul "${searchTerm}" pada tanggal ${formatDate(filterDate)}`;
+            }
+
+            showEmptyState(message);
+        }
+    }
+
+    // Event listeners dengan debounce untuk search
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterAndSort, 300);
+    });
+
+    sortSelect.addEventListener('change', filterAndSort);
+    dateInput.addEventListener('change', filterAndSort);
+});
     </script>
 @endpush

@@ -41,4 +41,22 @@ class TeacherSubmissionController extends Controller
 
         return redirect()->back()->with('success', 'Status tugas berhasil diperbarui!');
     }
+    public function setStatusFromTask(Request $request, $id)
+{
+    $submission = Submission::findOrFail($id);
+
+    $status = Status::where('name', $request->status)->first();
+
+    if (!$status) {
+        return back()->with('error', 'Status tidak ditemukan!');
+    }
+
+    $submission->update([
+        'status_id' => $status->id
+    ]);
+
+    return back()->with('success', 'Status berhasil diperbarui!');
+}
+
+
 }

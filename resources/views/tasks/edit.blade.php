@@ -6,7 +6,7 @@
         ✏️ Edit Tugas: <span class="text-blue-600">{{ $task->title }}</span>
     </h1>
 
-    <form action="{{ route('tasks.update', ['todolist' => $task->todo_list_id, 'task' => $task->id]) }}"
+    <form  data-turbo="false" action="{{ route('tasks.update', ['todolist' => $task->todo_list_id, 'task' => $task->id]) }}"
           method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')

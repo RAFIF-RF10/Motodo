@@ -39,18 +39,18 @@
                     <span class="font-medium sidebar-text whitespace-nowrap">Kelola Tugas Siswa</span>
                 </a>
 
-                {{-- <a href="{{ route('reports.index') }}"
+                <a href="{{ route('teacher.settings.users.index') }}"
                     class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 transition-all duration-200 group
                     {{ request()->routeIs('reports.*') ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30' : '' }}
                     dark:text-gray-300 dark:hover:bg-[#2C3E48]">
                     <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                        {{ svg('ri-file-list-line', 'w-5 h-5') }}
+                        {{-- {{ svg('heroheroicon-c-user-group', 'w-5 h-5') }} --}}
+                        {{ svg('heroicon-o-user-group', 'w-5 h-5') }}
                     </div>
-                    <span class="font-medium sidebar-text whitespace-nowrap">Laporan Tugas</span>
-                </a> --}}
+                    <span class="font-medium sidebar-text whitespace-nowrap">Settings  Siswa</span>
+                </a>
             @endif
 
-            {{-- 🔹 Menu untuk SISWA --}}
             @if (auth()->user()->role->name === 'User')
                 <a href="{{ route('student.todo.index') }}"
                     class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 transition-all duration-200 group

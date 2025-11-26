@@ -1,7 +1,8 @@
 @extends('layout.app')
 
 @section('content')
-    <div class="p-6 mt-20 max-w-5xl mx-auto space-y-10">
+    <meta name="turbo-cache-control" content="no-cache">
+    <div class="p-6 mt-2 max-w-5xl mx-auto space-y-10">
 
         {{-- HEADER --}}
         <div
@@ -46,7 +47,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Batas Waktu</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p class="text-2xs font-bold text-gray-900 dark:text-white">
                         {{ $task->deadline ? $task->deadline->format('d M Y') : '-' }}
                     </p>
                 </div>
@@ -60,7 +61,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Status</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p class="text-2xs font-bold text-gray-900 dark:text-white">
                         {{ $task->submissions->count() ? 'Sudah Dikumpulkan' : 'Belum' }}
                     </p>
                 </div>
@@ -105,7 +106,7 @@
                     class="w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all shadow-lg
                 {{ $sudahDikumpulkan
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-[#0064E0] to-[#0082FB] hover:from-[#0082FB] hover:to-[#0064E0]' }}">
+                    : 'bg-gradient-to-r cursor-pointer from-[#0064E0] to-[#0082FB] hover:from-[#0082FB] hover:to-[#0064E0]' }}">
                     @if ($sudahDikumpulkan)
                         {{ svg('heroicon-s-lock-closed', 'w-5 h-5') }}
                         Sudah Dikumpulkan

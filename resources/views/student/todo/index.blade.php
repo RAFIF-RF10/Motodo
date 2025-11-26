@@ -38,7 +38,6 @@
         <div id="taskContainer" class="flex flex-col gap-6">
             @forelse($lists as $list)
                 @php
-                    // Untuk keperluan sorting di JS
                     $timestamp = $list->created_at->timestamp;
                     $progress =
                         isset($list->submissions_completed) &&
@@ -123,75 +122,69 @@
         </div>
 
         <div id="filterEmptyState"
-            class="hidden bg-white flex justify-center flex-col align-items-center dark:bg-[#1E293B] rounded-2xl p-10 text-center border border-gray-200 dark:border-gray-700/50">
-            <div class="text-4xl  mb-4">{{ svg('heroicon-s-magnifying-glass', 'w-10 h-10 text-blue-500') }}</div>
+            class="hidden bg-white flex justify-center  text-centerflex-col align-items-center dark:bg-[#1E293B] rounded-2xl p-10 text-center border border-gray-200 dark:border-gray-700/50">
+            <div class="text-4xl text-center justify-center items-center mb-4">{{ svg('heroicon-s-magnifying-glass', 'w-10 h-10 text-blue-500') }}</div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tidak ada tugas ditemukan</h3>
             <p class="text-gray-600 dark:text-gray-400">Coba kata kunci pencarian atau urutan lain.</p>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('searchInput');
-            const sortSelect = document.getElementById('sort');
-            const taskContainer = document.getElementById('taskContainer');
-            const cards = Array.from(document.querySelectorAll('.task-card'));
-            const noTasksDefault = document.getElementById('noTasksFound');
-            const filterEmptyState = document.getElementById('filterEmptyState');
+   <script>
+   document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sort');
+    const taskContainer = document.getElementById('taskContainer');
+    const cards = Array.from(taskContainer.querySelectorAll('.task-card'));
+    const noTasksDefault = document.getElementById('noTasksFound');
+    const filterEmptyState = document.getElementById('filterEmptyState');
 
-            function filterAndSortTasks() {
-                const searchTerm = searchInput.value.trim().toLowerCase();
-                const sortOrder = sortSelect.value;
-                let visibleCount = 0;
+    function filterAndSortTasks() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const sortOrder = sortSelect.value;
 
-                cards.forEach(card => {
-                    const title = card.getAttribute('data-title').toLowerCase();
-                    const isMatch = title.includes(searchTerm);
+        let visibleCards = [];
 
-                    if (isMatch) {
-                        card.style.display = 'flex'; // Tampilkan kartu
-                        visibleCount++;
-                    } else {
-                        card.style.display = 'none'; // Sembunyikan kartu
-                    }
-                });
-
-                const visibleCards = cards.filter(card => card.style.display !== 'none');
-
-                visibleCards.sort((a, b) => {
-                    const timeA = parseInt(a.getAttribute('data-timestamp'));
-                    const timeB = parseInt(b.getAttribute('data-timestamp'));
-
-                    if (sortOrder === 'desc') {
-                        return timeB - timeA;
-                    } else {
-                        return timeA - timeB;
-                    }
-                });
-
-                visibleCards.forEach(card => {
-                    taskContainer.appendChild(card);
-                });
-
-                if (noTasksDefault) noTasksDefault.classList.add(
-                'hidden'); // Sembunyikan default empty state jika ada
-
-                if (visibleCount === 0) {
-                    filterEmptyState.classList.remove('hidden');
-                } else {
-                    filterEmptyState.classList.add('hidden');
-                }
+        cards.forEach(card => {
+            const title = card.dataset.title.toLowerCase();
+            if (title.includes(searchTerm)) {
+                card.style.display = ''; // pakai default display
+                visibleCards.push(card);
+            } else {
+                card.style.display = 'none';
             }
-
-            let timeout;
-            searchInput.addEventListener('input', () => {
-                clearTimeout(timeout);
-                timeout = setTimeout(filterAndSortTasks, 300);
-            });
-
-            sortSelect.addEventListener('change', filterAndSortTasks);
-
-            filterAndSortTasks();
         });
-    </script>
+
+        // Sorting
+        visibleCards.sort((a, b) => {
+            const timeA = parseInt(a.dataset.timestamp);
+            const timeB = parseInt(b.dataset.timestamp);
+            return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+        });
+
+        // Re-append sorted cards
+        visibleCards.forEach(card => taskContainer.appendChild(card));
+
+        // Atur empty state
+        if (visibleCards.length === 0) {
+            if (noTasksDefault) noTasksDefault.classList.add('hidden');
+            filterEmptyState.classList.remove('hidden');
+        } else {
+            filterEmptyState.classList.add('hidden');
+            if (noTasksDefault) noTasksDefault.classList.add('hidden');
+        }
+    }
+
+    let timeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(filterAndSortTasks, 200);
+    });
+
+    sortSelect.addEventListener('change', filterAndSortTasks);
+
+    filterAndSortTasks();
+});
+
+</script>
+
 @endsection
